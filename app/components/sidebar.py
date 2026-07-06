@@ -57,6 +57,7 @@ def sidebar(active_route: str = "/") -> rx.Component:
                     class_name="text-[10px] font-semibold text-gray-400 tracking-wider px-3 mt-6 mb-2",
                 ),
                 _nav_item("search", "Discover", "/discover", active_route),
+                _nav_item("chart-bar", "Markets", "/markets", active_route),
                 rx.el.p(
                     "MANAGE",
                     class_name="text-[10px] font-semibold text-gray-400 tracking-wider px-3 mt-6 mb-2",

@@ -7,7 +7,9 @@ from app.components.asset_detail import asset_detail_content
 from app.components.performance import performance_content
 from app.components.transactions import transactions_content
 from app.components.settings import settings_content
+from app.components.markets import markets_content
 from app.states.market_state import MarketState
+from app.states.markets_state import MarketsState
 
 
 def index() -> rx.Component:
@@ -73,6 +75,15 @@ def settings_page() -> rx.Component:
     )
 
 
+def markets_page() -> rx.Component:
+    return page_layout(
+        markets_content(),
+        active_route="/markets",
+        title="Markets Performance",
+        subtitle="Cross-asset quarterly returns, cumulative performance, and CAGR across the tracked universe.",
+    )
+
+
 app = rx.App(
     theme=rx.theme(appearance="light"),
     head_components=[
@@ -99,3 +110,4 @@ app.add_page(
 )
 app.add_page(transactions_page, route="/transactions")
 app.add_page(settings_page, route="/settings")
+app.add_page(markets_page, route="/markets", on_load=MarketsState.load_report)

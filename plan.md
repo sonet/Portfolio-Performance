@@ -22,3 +22,14 @@
 - [x] Validate key state flows for navigation, data refresh, holding changes, transaction entry, CSV parsing, and manual overrides.
 - [x] Ensure responsive behavior across desktop, tablet, and mobile layouts with complete empty, loading, success, and error states.
 - [x] Finalize cohesive UI polish, realistic starter data, accessibility labels, and helpful user guidance throughout the app.
+
+## Phase 5: Markets Performance Screen ✅
+- [x] Add a Markets performance page under the Markets navigation group with the same clean light dashboard design and blue accent.
+- [x] Convert the uploaded notebook workflow into app data processing for asset-class monthly prices, quarterly returns, cumulative return, and CAGR.
+- [x] Add market filters for search, sector, class, custom date range, and predefined intervals with loading, cached, success, and error states.
+- [x] Build notebook-inspired performance reporting with summary cards, top/bottom performers, sector/class breakdowns, and a color-scaled quarterly return table.
+
+## Phase 6: Markets Performance Validation ✅
+- [x] Validate ticker universe loading from the uploaded asset list and resilient fallback behavior when live market data is unavailable.
+- [x] Validate interval, custom range, sector, class, and search filtering logic.
+- [x] Ensure the Markets performance page is responsive, accessible, and clearly distinguished from holdings-focused Performance.

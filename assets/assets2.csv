@@ -1,0 +1,130 @@
+Ticker,Sector,Class,Name
+DBC,Commodities,Commodities,Invesco DB Commodity Index Tracking Fund
+QQQ,Technology,US Large Cap Growth,Invesco QQQ Trust
+IWM,Equity,US Small Cap,iShares Russell 2000 ETF
+VWO,International,Emerging Markets,Vanguard FTSE Emerging Markets ETF
+MDY,Equity,US Mid Cap,SPDR S&P MidCap 400 ETF Trust
+IWD,Equity,US Large Cap Value,iShares Russell 1000 Value ETF
+VNQ,Real Estate,Real Estate (REITs),Vanguard Real Estate ETF
+GLD,Commodities,Gold,SPDR Gold Shares
+SPY,Equity,US Large Cap Blend,SPDR S&P 500 ETF Trust
+EFA,International,International Developed Markets,iShares MSCI EAFE ETF
+IWF,Equity,US Large Cap Growth,iShares Russell 1000 Growth ETF
+PFF,Financials,Preferred Stocks,iShares Preferred and Income Securities ETF
+BIL,Equity,Cash/Treasury Bills,SPDR Bloomberg 1-3 Month T-Bill ETF
+BTC-USD,Cryptocurrency,Cryptocurrency,Bitcoin USD
+SOL-USD,Cryptocurrency,Cryptocurrency,Solana USD
+XRP-USD,Cryptocurrency,Cryptocurrency,XRP USD
+ADA-USD,Cryptocurrency,Cryptocurrency,Cardano USD
+ETC-USD,Cryptocurrency,Cryptocurrency,Ethereum Classic USD
+ETH-USD,Cryptocurrency,Cryptocurrency,Ethereum USD
+AVAX-USD,Cryptocurrency,Cryptocurrency,AVAX USD
+ZEC-USD,Cryptocurrency,Cryptocurrency,0x USD
+AAVE-USD,Cryptocurrency,Cryptocurrency,AAVE USD
+VUG,Equity,US Large Cap Growth,Invesco VUG ETF
+NVDA,Technology,Stock,NVIDIA Corporation
+MSFT,Technology,Stock,Microsoft Corporation
+AMD,Technology,Stock,"Advanced Micro Devices, Inc."
+INTC,Technology,Stock,Intel Corporation
+GOOG,Technology,Stock,Google LLC (Class C)
+TSLA,Technology,Stock,"Tesla, Inc."
+SCHD,Equity,Dow Jones Dividends,Schwab US Dividend Equity ETF
+OKLO,Energy,Stock,"Oklo, Inc."
+PLTR,Military,Stock, Palantir Technologies Inc (Instrumentation)
+TDY,Military,Stock, Teledyne Technologies Inc
+LTRX,Military,Stock, Lantronix Inc (Connectivity)
+URNM,Commodities,Uranium,North Shore Global Uranium Mining ETF
+SPMO,Equity,US Large Cap Growth,Invesco S&P 500 Momentum ETF
+SGOV,Equity,Treasury Bonds, iShares 0-3 Month Treasury Bond ETF
+SLV,Commodities,Silver, iShares Silver Trust
+CPER,Commodities,Copper, United States Copper Index Fund
+COPX,Commodities,Copper, Global X Copper Miners ETF
+SPPP,Equity,US Large Cap Growth,Invesco S&P 500 Pure Growth ETF
+SOLS,Energy,Stock,"Electro-Sensors, Inc. (Solar Energy)"
+SEI,Energy,Stock, SEI Investments Company (Asset Management)
+LQDA,Healthcare,Stock, "Liquidity Services Inc. (Asset Management)"
+LEU,Energy,Uranium,Global X Uranium ETF
+NRP,Energy,Stock, NER Renewable Energy Inc (Renewable Energy)
+LMT,Military,Stock, Lockheed Martin Corporation
+BA,Military,Stock, The Boeing Company
+NOC,Military,Stock, Northrop Grumman Corporation
+GD,Military,Stock, General Dynamics Corporation
+LHX,Military,Stock, L3Harris Technologies Inc
+LDOS,Military,Stock, Leidos Holdings Inc
+RNMBY,Military,Stock, Rheinmetall AG (Defense)
+AMZN,Technology,Stock,Amazon.com Inc
+META,Technology,Stock,Meta Platforms Inc (Facebook)
+TSM,Technology,Stock,Taiwan Semiconductor Manufacturing Company Limited
+AVGO,Technology,Stock,Broadcom Inc
+ASML,Technology,Stock,ASML Holding NV
+IBM,Technology,Stock,International Business Machines Corporation
+QCOM,Technology,Stock,QUALCOMM Incorporated
+NFLX,Technology,Stock,Netflix Inc
+URA,Commodities,Uranium,Global X Uranium ETF
+DELL,Technology,Stock,Dell Technologies Inc
+JEPQ,Equity,US Large Cap Growth,JPMorgan Equity Premium Income ETF
+AUGO,Technology,Stock,Autonomous Go Inc (Autonomous Vehicles)
+AEHR,Technology,Stock,Aehr Test Systems (Semiconductor Equipment)
+MU,Technology,Stock,Micron Technology Inc (Semiconductors)
+FIX,Services,Stock,Comfort Systems USA Inc (Building Automation)
+FTAI,Healthcare,Stock,Fortress Transportation and Infrastructure Investors LLC (Infrastructure)
+IESC,Services,Stock,IES Holdings Inc (IT Services)
+ALM,Technology,Stock,Almaden Minerals Ltd (Minerals)
+LLY,Healthcare,Stock,Eli Lilly and Company (Pharmaceuticals)
+WMT,Consumer Staples,Stock,Walmart Inc (Retail)
+GE,Industrial,Stock,General Electric Company (Conglomerate)
+XOM,Energy,Stock,Exxon Mobil Corporation (Oil & Gas)
+NEE,Energy,Stock,NextEra Energy Inc (Renewable Energy)
+PLD,Real Estate,Stock,Prologis Inc (Industrial REIT)
+LIN,Materials,Stock,Linde plc (Chemicals)
+COST,Consumer Staples,Stock,Costco Wholesale Corporation (Retail)
+JNJ,Healthcare,Stock,Johnson & Johnson (Pharmaceuticals)
+PG,Consumer Staples,Stock,Procter & Gamble Co (Consumer Goods)
+V,Financials,Stock,Visa Inc (Financial Services)
+MA,Financials,Stock,Mastercard Incorporated (Financial Services)
+HD,Consumer Discretionary,Stock,The Home Depot Inc (Retail)
+MCD,Consumer Discretionary,Stock,McDonald's Corporation (Restaurants)
+DIS,Communication Services,Stock,The Walt Disney Company (Entertainment)
+BE,Energy,Stock,Bloom Energy Corporation (Clean Energy)
+NU,Energy,Stock,Nuclear Energy Corporation of India Limited (Nuclear Energy)
+TGS,Energy,Stock,Transportadora de Gas del Sur S.A. (Oil & Gas)
+FTI,Energy,Stock,TechnipFMC plc (Oil & Gas Services)
+FENY,Energy,Stock,Fidelity MSCI Energy Index ETF (Energy)
+VDE,Energy,Stock,Vanguard Energy ETF (Energy)
+XLE,Energy,Stock,Energy Select Sector SPDR Fund (Energy)
+BOTZ,Technology,Stock,Global X Robotics & Artificial Intelligence ETF (Robotics & AI)
+PATH,Technology,Stock,UiPath Inc (Robotic Process Automation)
+ISRG,Healthcare,Stock,Intuitive Surgical Inc (Medical Devices)
+GEV,Energy,Stock,GE Vernova Inc. is an energy equipment manufacturing and services company
+SNDK,Technology,Stock,SanDisk Corporation (Semiconductors)
+VSNT,Technology,Stock,Visteon Corporation (Automotive Technology)
+^GSPC,Major Index,Stock Index,S&P 500 - Primary benchmark for large-cap U.S. stocks
+ES=F,Major Index,Futures,S&P 500 Futures - Most actively traded S&P 500 futures contract
+^IXIC,Major Index,Stock Index,Nasdaq Composite - Technology-heavy index of all Nasdaq-listed stocks
+^NDX,Major Index,Stock Index,Nasdaq-100 - Top 100 non-financial companies on Nasdaq (tech/AI focused)
+^DJI,Major Index,Stock Index,Dow Jones Industrial Average - 30 large prominent U.S. companies
+^RUT,Major Index,Stock Index,Russell 2000 - Small-cap U.S. stocks benchmark
+^NYA,Major Index,Stock Index,NYSE Composite - All common stocks listed on the New York Stock Exchange
+^VIX,Major Index,Volatility Index,VIX - CBOE Volatility Index (market "fear gauge")
+ALGM,Technology,Stock,Allegro MicroSystems Inc (Semiconductors)
+ON,Technology,Stock,ON Semiconductor Corporation (Semiconductors)
+TER,Technology,Stock,Teradyne Inc (Semiconductor Equipment)
+NUE,Materials,Stock,Nucor Corporation (Steel)
+CCSI,Technology,Stock,CCS Inc (Semiconductor Equipment)
+MOH,Healthcare,Stock,Molina Healthcare Inc (Health Insurance)
+VRTX,Healthcare,Stock,Vertex Pharmaceuticals Incorporated (Biotechnology)
+MRNA,Healthcare,Stock,Moderna Inc (Biotechnology)
+BNTX,Healthcare,Stock,BioNTech SE (Biotechnology)
+PFE,Healthcare,Stock,Pfizer Inc (Pharmaceuticals)
+MRK,Healthcare,Stock,Merck & Co Inc (Pharmaceuticals)
+ABT,Healthcare,Stock,Abbott Laboratories (Healthcare Products)
+GILD,Healthcare,Stock,Gilead Sciences Inc (Biotechnology)
+AMGN,Healthcare,Stock,Amgen Inc (Biotechnology)
+MLPX,Energy,Stock,MLPX ETF (Master Limited Partnerships)
+VHT,Healthcare,Stock,Vanguard Health Care ETF (Healthcare)
+IYH,Healthcare,Stock,iShares U.S. Healthcare ETF (Healthcare)
+AIOZ-USD,Cryptocurrency,Cryptocurrency,AIOZ Network USD
+NEAR-USD,Cryptocurrency,Cryptocurrency,NEAR Protocol USD
+AVAX-USD,Cryptocurrency,Cryptocurrency,AVAX USD
+RENDER-USD,Cryptocurrency,Cryptocurrency,Render Token USD
+

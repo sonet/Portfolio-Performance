@@ -171,6 +171,26 @@ RANGE_DAYS: dict[str, int] = {
     "1Y": 365,
 }
 
+PERF_PRESET_DAYS: dict[str, int] = {
+    "10D": 10,
+    "30D": 30,
+    "5W": 35,
+    "10W": 70,
+    "6M": 180,
+    "12M": 365,
+    "5Y": 1825,
+}
+
+PERF_PRESET_LABELS: list[tuple[str, str]] = [
+    ("10D", "10 Days"),
+    ("30D", "30 Days"),
+    ("5W", "5 Weeks"),
+    ("10W", "10 Weeks"),
+    ("6M", "6 Months"),
+    ("12M", "12 Months"),
+    ("5Y", "5 Years"),
+]
+
 
 def _seed_from(symbol: str) -> int:
     return int(hashlib.md5(symbol.encode()).hexdigest()[:8], 16)
@@ -315,10 +335,14 @@ class MarketState(rx.State):
     error_message: str = ""
     data_source: str = "cached"
     last_updated: str = ""
-
     range_selection: str = "6M"
     discover_query: str = ""
     popular_symbols: list[dict[str, str]] = POPULAR_SYMBOLS
+
+    perf_range_preset: str = "12M"
+    perf_start_date: str = ""
+    perf_end_date: str = ""
+    perf_use_custom: bool = False
 
     @rx.var
     def filtered_discover(self) -> list[dict[str, str]]:
@@ -477,16 +501,16 @@ class MarketState(rx.State):
             port = await self.get_state(PortfolioState)
             holdings = list(port.holdings)
 
-        # Build per-symbol synthetic history and aggregate
+        # Build per-symbol synthetic history and aggregate — fetch up to 5y
         combined: dict[str, float] = {}
-        days = 365
+        days = 1825
         today = datetime.utcnow().date()
         cost_basis_total = sum(
             h["quantity"] * h["cost_basis"] for h in holdings
         )
         for h in holdings:
             sym = h["symbol"]
-            hist = _fetch_yfinance(sym, "1y")
+            hist = _fetch_yfinance(sym, "5y")
             if not hist or len(hist) < 5:
                 hist = _synthetic_history(
                     sym, float(h["current_price"]), days=days
@@ -497,7 +521,7 @@ class MarketState(rx.State):
                     h["quantity"]
                 )
 
-        bench = _fetch_yfinance("SPY", "1y")
+        bench = _fetch_yfinance("SPY", "5y")
         if not bench or len(bench) < 5:
             b_prices = _synthetic_benchmark(days=days, base=458.0)
             bench = [
@@ -563,3 +587,97 @@ class MarketState(rx.State):
     @rx.event
     def clear_error(self):
         self.error_message = ""
+
+    @rx.event
+    def set_perf_preset(self, preset: str):
+        self.perf_range_preset = preset
+        self.perf_use_custom = False
+        self.perf_start_date = ""
+        self.perf_end_date = ""
+
+    @rx.event
+    def set_perf_start_date(self, v: str):
+        self.perf_start_date = v
+        if v or self.perf_end_date:
+            self.perf_use_custom = True
+
+    @rx.event
+    def set_perf_end_date(self, v: str):
+        self.perf_end_date = v
+        if v or self.perf_start_date:
+            self.perf_use_custom = True
+
+    @rx.event
+    def clear_perf_custom(self):
+        self.perf_start_date = ""
+        self.perf_end_date = ""
+        self.perf_use_custom = False
+
+    @rx.var
+    def filtered_portfolio_history(self) -> list[dict[str, str | float]]:
+        full = self.portfolio_history
+        if not full:
+            return []
+        if self.perf_use_custom and (
+            self.perf_start_date or self.perf_end_date
+        ):
+            start = self.perf_start_date or full[0]["date"]
+            end = self.perf_end_date or full[-1]["date"]
+            sliced = [
+                pt
+                for pt in full
+                if str(pt["date"]) >= str(start) and str(pt["date"]) <= str(end)
+            ]
+        else:
+            days = PERF_PRESET_DAYS.get(self.perf_range_preset, 365)
+            sliced = full[-days:] if len(full) > days else full
+        if not sliced:
+            return []
+        base_val = float(sliced[0]["value"]) if sliced else 1.0
+        # find first bench value in sliced range
+        first_bench = None
+        for pt in sliced:
+            if (
+                "benchmark_indexed" in pt
+                and pt["benchmark_indexed"] is not None
+            ):
+                first_bench = float(pt["benchmark_indexed"])
+                break
+        first_bench = first_bench if first_bench and first_bench > 0 else 100.0
+        result: list[dict[str, str | float]] = []
+        for pt in sliced:
+            v = float(pt["value"])
+            b = float(pt.get("benchmark_indexed", first_bench))
+            portfolio_indexed = (v / base_val * 100) if base_val > 0 else 100.0
+            benchmark_indexed = (
+                (b / first_bench * 100) if first_bench > 0 else 100.0
+            )
+            result.append(
+                {
+                    "date": str(pt["date"]),
+                    "value": round(v, 2),
+                    "cost_basis": float(pt.get("cost_basis", 0.0)),
+                    "portfolio_indexed": round(portfolio_indexed, 2),
+                    "benchmark_indexed": round(benchmark_indexed, 2),
+                }
+            )
+        return result
+
+    @rx.var
+    def perf_range_summary(self) -> str:
+        if self.perf_use_custom and (
+            self.perf_start_date or self.perf_end_date
+        ):
+            s = self.perf_start_date or "start"
+            e = self.perf_end_date or "today"
+            return f"Custom: {s} → {e}"
+        labels = {
+            "10D": "Last 10 days",
+            "30D": "Last 30 days",
+            "5W": "Last 5 weeks",
+            "10W": "Last 10 weeks",
+            "6M": "Last 6 months",
+            "12M": "Last 12 months",
+            "5Y": "Last 5 years",
+        }
+        return labels.get(self.perf_range_preset, "Last 12 months")

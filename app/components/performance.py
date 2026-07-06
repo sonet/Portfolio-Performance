@@ -1,7 +1,102 @@
 import reflex as rx
-from app.states.market_state import MarketState
+from app.states.market_state import MarketState, PERF_PRESET_LABELS
 from app.states.portfolio_state import PortfolioState
 from app.components.chart_utils import TOOLTIP_PROPS, CHART_TOOLTIP_CN
+
+
+def _preset_button(preset_key: str, label: str) -> rx.Component:
+    is_active = (
+        MarketState.perf_range_preset == preset_key
+    ) & ~MarketState.perf_use_custom
+    return rx.el.button(
+        label,
+        on_click=lambda: MarketState.set_perf_preset(preset_key),
+        class_name=rx.cond(
+            is_active,
+            "px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-600 text-white border border-blue-600 whitespace-nowrap",
+            "px-3 py-1.5 rounded-md text-xs font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 whitespace-nowrap",
+        ),
+        type="button",
+    )
+
+
+def _range_controls() -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.h3(
+                    "Time Range",
+                    class_name="text-sm font-semibold text-gray-900",
+                ),
+                rx.el.p(
+                    MarketState.perf_range_summary,
+                    class_name="text-xs text-gray-500 mt-0.5",
+                ),
+            ),
+            rx.icon("calendar-range", class_name="h-4 w-4 text-gray-400"),
+            class_name="flex items-start justify-between mb-3",
+        ),
+        rx.el.div(
+            rx.el.p(
+                "Presets",
+                class_name="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2",
+            ),
+            rx.el.div(
+                rx.foreach(
+                    PERF_PRESET_LABELS,
+                    lambda item: _preset_button(item[0], item[1]),
+                ),
+                class_name="flex items-center gap-1.5 flex-wrap",
+            ),
+            class_name="mb-4",
+        ),
+        rx.el.div(
+            rx.el.p(
+                "Custom Range",
+                class_name="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2",
+            ),
+            rx.el.div(
+                rx.el.div(
+                    rx.el.label(
+                        "Start date",
+                        class_name="text-[11px] font-medium text-gray-600 mb-1 block",
+                    ),
+                    rx.el.input(
+                        type="date",
+                        default_value=MarketState.perf_start_date,
+                        on_change=MarketState.set_perf_start_date.debounce(200),
+                        class_name="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white text-gray-900",
+                    ),
+                    class_name="flex-1 min-w-[140px]",
+                ),
+                rx.el.div(
+                    rx.el.label(
+                        "End date",
+                        class_name="text-[11px] font-medium text-gray-600 mb-1 block",
+                    ),
+                    rx.el.input(
+                        type="date",
+                        default_value=MarketState.perf_end_date,
+                        on_change=MarketState.set_perf_end_date.debounce(200),
+                        class_name="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white text-gray-900",
+                    ),
+                    class_name="flex-1 min-w-[140px]",
+                ),
+                rx.el.div(
+                    rx.el.button(
+                        rx.icon("x", class_name="h-3.5 w-3.5"),
+                        "Clear",
+                        on_click=MarketState.clear_perf_custom,
+                        type="button",
+                        class_name="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-1.5 h-[38px] mt-[19px]",
+                    ),
+                    class_name="shrink-0",
+                ),
+                class_name="flex items-end gap-2 flex-wrap",
+            ),
+        ),
+        class_name="bg-white border border-gray-200 rounded-xl p-5 mb-4",
+    )
 
 
 def _kpi(
@@ -89,7 +184,7 @@ def _portfolio_chart() -> rx.Component:
             class_name="flex items-start justify-between mb-4",
         ),
         rx.cond(
-            MarketState.portfolio_history.length() > 0,
+            MarketState.filtered_portfolio_history.length() > 0,
             rx.recharts.area_chart(
                 rx.recharts.cartesian_grid(
                     horizontal=True, vertical=False, class_name="opacity-25"
@@ -119,7 +214,7 @@ def _portfolio_chart() -> rx.Component:
                     tick_size=10,
                     custom_attrs={"fontSize": "11px"},
                 ),
-                data=MarketState.portfolio_history,
+                data=MarketState.filtered_portfolio_history,
                 height=300,
                 width="100%",
                 margin={"left": 10, "right": 10, "top": 10, "bottom": 0},
@@ -180,7 +275,7 @@ def _benchmark_chart() -> rx.Component:
             class_name="flex items-start justify-between mb-4 flex-wrap gap-3",
         ),
         rx.cond(
-            MarketState.portfolio_history.length() > 0,
+            MarketState.filtered_portfolio_history.length() > 0,
             rx.recharts.line_chart(
                 rx.recharts.cartesian_grid(
                     horizontal=True, vertical=False, class_name="opacity-25"
@@ -216,7 +311,7 @@ def _benchmark_chart() -> rx.Component:
                     tick_size=10,
                     custom_attrs={"fontSize": "11px"},
                 ),
-                data=MarketState.portfolio_history,
+                data=MarketState.filtered_portfolio_history,
                 height=280,
                 width="100%",
                 margin={"left": 10, "right": 10, "top": 10, "bottom": 0},
@@ -365,6 +460,7 @@ def performance_content() -> rx.Component:
             ),
             class_name="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4",
         ),
+        _range_controls(),
         _portfolio_chart(),
         rx.el.div(
             rx.el.div(_benchmark_chart(), class_name="lg:col-span-2"),

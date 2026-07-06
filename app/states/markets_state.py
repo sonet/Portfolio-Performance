@@ -63,6 +63,22 @@ def _seed_from(symbol: str) -> int:
     return int(hashlib.md5(symbol.encode()).hexdigest()[:8], 16)
 
 
+def _color_class_for(value: float) -> str:
+    if value >= 20:
+        return "bg-emerald-600 text-white border border-emerald-700"
+    if value >= 10:
+        return "bg-emerald-400 text-emerald-950 border border-emerald-500"
+    if value >= 3:
+        return "bg-emerald-200 text-emerald-900 border border-emerald-300"
+    if value >= 0:
+        return "bg-emerald-50 text-emerald-800 border border-emerald-100"
+    if value >= -3:
+        return "bg-amber-100 text-amber-900 border border-amber-200"
+    if value >= -10:
+        return "bg-red-200 text-red-900 border border-red-300"
+    return "bg-red-600 text-white border border-red-700"
+
+
 def _load_asset_universe() -> list[AssetRow]:
     csv_path = Path("assets/assets2.csv")
     result: list[AssetRow] = []
@@ -313,12 +329,14 @@ class MarketsState(rx.State):
         return labels[-lookback:] if lookback < len(labels) else labels
 
     @rx.var
-    def filtered_rows(self) -> list[dict[str, str | float | bool | int]]:
+    def filtered_rows(
+        self,
+    ) -> list[dict[str, str | float | bool | int | list]]:
         q = self.search_query.strip().lower()
         vis_labels = self.visible_quarter_labels
         if not vis_labels:
             return []
-        rows: list[dict[str, str | float | bool | int]] = []
+        rows: list[dict[str, str | float | bool | int | list]] = []
         for r in self.report_rows:
             if (
                 self.filter_sector != "All"
@@ -367,22 +385,37 @@ class MarketsState(rx.State):
             if valid:
                 latest_return = returns.get(valid[-1], 0.0)
 
-            row: dict[str, str | float | bool | int] = {
+            quarter_cells: list[dict[str, str | float | bool]] = []
+            for lbl in vis_labels:
+                has_ret = lbl in returns
+                val = returns.get(lbl, 0.0) if has_ret else 0.0
+                quarter_cells.append(
+                    {
+                        "label": lbl,
+                        "value": val,
+                        "display": f"{val:.1f}%" if has_ret else "—",
+                        "has_data": has_ret,
+                        "color_class": _color_class_for(val) if has_ret else "",
+                    }
+                )
+
+            cumulative_class = (
+                _color_class_for(period_cumulative) if valid else ""
+            )
+
+            row: dict[str, str | float | bool | int | list] = {
                 "ticker": r["ticker"],
                 "sector": r["sector"],
                 "asset_class": r["asset_class"],
                 "name": r["name"],
                 "cumulative": period_cumulative,
+                "cumulative_class": cumulative_class,
                 "cagr": period_cagr,
                 "latest_return": latest_return,
                 "is_positive": period_cumulative >= 0,
                 "has_data": len(valid) > 0,
+                "quarter_cells": quarter_cells,
             }
-            for lbl in vis_labels:
-                row[f"q_{lbl}"] = returns.get(lbl, 0.0)
-                row[f"has_q_{lbl}"] = lbl in returns
-                row[f"p_{lbl}"] = prices.get(lbl, 0.0)
-                row[f"has_p_{lbl}"] = lbl in prices
             rows.append(row)
 
         key = self.sort_by

@@ -2,26 +2,26 @@ import reflex as rx
 from app.states.markets_state import MarketsState, INTERVAL_LABELS
 
 
-def _color_scale_style(value: rx.Var) -> rx.Var:
+def _cell_class(value: rx.Var) -> rx.Var:
     return rx.cond(
         value >= 20,
-        "background-color: #16a34a; color: white;",
+        "text-[11px] font-mono font-semibold text-center px-2 py-1.5 rounded bg-emerald-600 text-white border border-emerald-700",
         rx.cond(
             value >= 10,
-            "background-color: #4ade80; color: #14532d;",
+            "text-[11px] font-mono font-semibold text-center px-2 py-1.5 rounded bg-emerald-400 text-emerald-950 border border-emerald-500",
             rx.cond(
                 value >= 3,
-                "background-color: #bbf7d0; color: #14532d;",
+                "text-[11px] font-mono font-semibold text-center px-2 py-1.5 rounded bg-emerald-200 text-emerald-900 border border-emerald-300",
                 rx.cond(
                     value >= 0,
-                    "background-color: #ecfccb; color: #365314;",
+                    "text-[11px] font-mono font-semibold text-center px-2 py-1.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-100",
                     rx.cond(
                         value >= -3,
-                        "background-color: #fef3c7; color: #78350f;",
+                        "text-[11px] font-mono font-semibold text-center px-2 py-1.5 rounded bg-amber-100 text-amber-900 border border-amber-200",
                         rx.cond(
                             value >= -10,
-                            "background-color: #fecaca; color: #7f1d1d;",
-                            "background-color: #dc2626; color: white;",
+                            "text-[11px] font-mono font-semibold text-center px-2 py-1.5 rounded bg-red-200 text-red-900 border border-red-300",
+                            "text-[11px] font-mono font-semibold text-center px-2 py-1.5 rounded bg-red-600 text-white border border-red-700",
                         ),
                     ),
                 ),
@@ -576,20 +576,16 @@ def _quarter_header(lbl: rx.Var) -> rx.Component:
     )
 
 
-def _quarter_return_cell(row: rx.Var, lbl: rx.Var) -> rx.Component:
-    key = "q_" + lbl.to_string()
-    has_key = "has_q_" + lbl.to_string()
-    val = row[key].to(float)
+def _quarter_return_cell(cell: rx.Var) -> rx.Component:
     return rx.el.td(
         rx.cond(
-            row[has_key].to(bool),
+            cell["has_data"].to(bool),
             rx.el.div(
-                f"{val:.1f}%",
-                class_name="text-[11px] font-mono font-medium text-center px-2 py-1.5 rounded",
-                style=_color_scale_style(val),
+                cell["display"].to(str),
+                class_name=_cell_class(cell["value"].to(float)),
             ),
             rx.el.p(
-                "—",
+                cell["display"].to(str),
                 class_name="text-xs text-gray-300 text-center",
             ),
         ),
@@ -629,16 +625,15 @@ def _table_row(row: rx.Var) -> rx.Component:
             class_name="px-3 py-2",
         ),
         rx.foreach(
-            MarketsState.visible_quarter_labels,
-            lambda lbl: _quarter_return_cell(row, lbl),
+            row["quarter_cells"].to(list[dict[str, str | float | bool]]),
+            _quarter_return_cell,
         ),
         rx.el.td(
             rx.cond(
                 row["has_data"].to(bool),
                 rx.el.div(
                     f"{row['cumulative'].to(float):.1f}%",
-                    class_name="text-[11px] font-mono font-semibold text-center px-2 py-1.5 rounded",
-                    style=_color_scale_style(row["cumulative"].to(float)),
+                    class_name=_cell_class(row["cumulative"].to(float)),
                 ),
                 rx.el.p("—", class_name="text-xs text-gray-300 text-center"),
             ),

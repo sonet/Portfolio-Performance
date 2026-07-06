@@ -33,3 +33,9 @@
 - [x] Validate ticker universe loading from the uploaded asset list and resilient fallback behavior when live market data is unavailable.
 - [x] Validate interval, custom range, sector, class, and search filtering logic.
 - [x] Ensure the Markets performance page is responsive, accessible, and clearly distinguished from holdings-focused Performance.
+
+## Phase 7: Dynamic Markets Return Columns ✅
+- [x] Update Markets return periods so selected intervals control the number and granularity of percent-change columns.
+- [x] Add daily, weekly, monthly, and quarterly period generation while preserving cumulative return and CAGR summaries.
+- [x] Update the report table labeling and empty states so users understand the active interval granularity.
+- [x] Validate examples including 12 months, 10 days, 10 weeks, 30 days, and 3 years.

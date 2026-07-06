@@ -4,6 +4,7 @@ import csv
 import math
 import random
 import hashlib
+from bisect import bisect_right
 from datetime import datetime, date, timedelta
 from pathlib import Path
 from typing import TypedDict
@@ -16,20 +17,9 @@ class AssetRow(TypedDict):
     name: str
 
 
-class ReportRow(TypedDict):
-    ticker: str
-    sector: str
-    asset_class: str
-    name: str
-    quarter_prices: dict[str, float]
-    quarter_returns: dict[str, float]
-    cumulative: float
-    cagr: float
-    is_positive: bool
-
-
 INTERVAL_LABELS: list[tuple[str, str]] = [
     ("5Y", "5 Years"),
+    ("3Y", "3 Years"),
     ("12M", "12 Months"),
     ("6M", "6 Months"),
     ("10W", "10 Weeks"),
@@ -38,24 +28,41 @@ INTERVAL_LABELS: list[tuple[str, str]] = [
     ("10D", "10 Days"),
 ]
 
-INTERVAL_LOOKBACK_QUARTERS: dict[str, int] = {
-    "5Y": 20,
-    "12M": 4,
-    "6M": 2,
-    "10W": 1,
-    "5W": 1,
-    "30D": 1,
-    "10D": 1,
+
+# Each entry is (granularity, column_count, step_between_periods)
+INTERVAL_CONFIG: dict[str, tuple[str, int, int]] = {
+    "10D": ("day", 10, 1),
+    "30D": ("day", 10, 3),
+    "5W": ("week", 5, 1),
+    "10W": ("week", 10, 1),
+    "6M": ("month", 6, 1),
+    "12M": ("month", 12, 1),
+    "3Y": ("quarter", 12, 1),
+    "5Y": ("quarter", 20, 1),
 }
 
-INTERVAL_DAYS: dict[str, int] = {
-    "5Y": 1825,
-    "12M": 365,
-    "6M": 180,
-    "10W": 70,
-    "5W": 35,
-    "30D": 30,
-    "10D": 10,
+
+GRANULARITY_LABELS: dict[str, dict[str, str]] = {
+    "day": {
+        "adj": "daily",
+        "period": "Day-over-day",
+        "unit": "Daily",
+    },
+    "week": {
+        "adj": "weekly",
+        "period": "Week-over-week",
+        "unit": "Weekly",
+    },
+    "month": {
+        "adj": "monthly",
+        "period": "Month-over-month",
+        "unit": "Monthly",
+    },
+    "quarter": {
+        "adj": "quarterly",
+        "period": "Quarter-over-quarter",
+        "unit": "Quarterly",
+    },
 }
 
 
@@ -107,75 +114,116 @@ def _load_asset_universe() -> list[AssetRow]:
 ASSET_UNIVERSE: list[AssetRow] = _load_asset_universe()
 
 
-def _quarter_labels(year_start: int = 2022) -> list[str]:
-    today = datetime.utcnow().date()
-    current_year = today.year
-    current_quarter = (today.month - 1) // 3 + 1
-    labels: list[str] = []
-    for y in range(year_start, current_year + 1):
-        max_q = current_quarter if y == current_year else 4
-        for q in range(1, max_q + 1):
-            labels.append(f"{y}-Q{q}")
-    return labels
+def _last_day_of_month(y: int, m: int) -> date:
+    if m == 12:
+        return date(y, 12, 31)
+    return date(y, m + 1, 1) - timedelta(days=1)
 
 
-def _quarter_end_date(label: str) -> date:
-    y_str, q_str = label.split("-Q")
-    y = int(y_str)
-    q = int(q_str)
-    month = q * 3
-    if month == 3:
-        return date(y, 3, 31)
-    if month == 6:
-        return date(y, 6, 30)
-    if month == 9:
-        return date(y, 9, 30)
-    return date(y, 12, 31)
+def _quarter_end(y: int, q: int) -> date:
+    return _last_day_of_month(y, q * 3)
 
 
-def _synthetic_monthly_prices(
-    ticker: str, months: int
-) -> list[tuple[date, float]]:
+def _period_end_dates(
+    granularity: str, count: int, step: int, end_d: date
+) -> list[date]:
+    """Return count+1 period-end boundary dates so we can compute `count`
+    period-over-period percent-change columns."""
+    ends: list[date] = []
+    if granularity == "day":
+        for i in range(count + 1):
+            ends.append(end_d - timedelta(days=(count - i) * step))
+    elif granularity == "week":
+        # anchor: last Friday <= end_d (weekday 4)
+        anchor = end_d - timedelta(days=(end_d.weekday() - 4) % 7)
+        for i in range(count + 1):
+            ends.append(anchor - timedelta(weeks=(count - i) * step))
+    elif granularity == "month":
+        y, m = end_d.year, end_d.month
+        for i in range(count + 1):
+            offset = (count - i) * step
+            ny, nm = y, m - offset
+            while nm <= 0:
+                nm += 12
+                ny -= 1
+            ends.append(_last_day_of_month(ny, nm))
+    elif granularity == "quarter":
+        y, m = end_d.year, end_d.month
+        cq = (m - 1) // 3 + 1
+        for i in range(count + 1):
+            offset = (count - i) * step
+            nq = cq - offset
+            ny = y
+            while nq <= 0:
+                nq += 4
+                ny -= 1
+            ends.append(_quarter_end(ny, nq))
+    return ends
+
+
+def _format_period_label(granularity: str, d: date) -> str:
+    if granularity == "day":
+        return d.strftime("%b %d")
+    if granularity == "week":
+        iso_week = d.isocalendar()[1]
+        return f"W{iso_week:02d} '{d.strftime('%y')}"
+    if granularity == "month":
+        return d.strftime("%b '%y")
+    return f"{d.year} Q{(d.month - 1) // 3 + 1}"
+
+
+def _choose_custom_config(days: int) -> tuple[str, int, int]:
+    """Pick a sensible granularity, count, and step for a custom date range."""
+    if days <= 20:
+        return ("day", max(min(days, 15), 3), 1)
+    if days <= 60:
+        step = max(days // 10, 1)
+        return ("day", 10, step)
+    if days <= 90:
+        return ("week", max(days // 7, 3), 1)
+    if days <= 180:
+        return ("week", 10, max(days // 70, 1))
+    if days <= 3 * 365:
+        return ("month", max(min(days // 30, 24), 3), 1)
+    if days <= 6 * 365:
+        return ("quarter", max(min(days // 90, 20), 4), 1)
+    return ("quarter", 20, max(days // (20 * 90), 1))
+
+
+def _synthetic_daily_prices(
+    ticker: str, days: int = 1825
+) -> list[list[str | float]]:
     rng = random.Random(_seed_from(ticker))
     base = 20 + (_seed_from(ticker) % 480)
     is_crypto = "-USD" in ticker.upper()
-    vol = 0.09 if is_crypto else 0.045
-    drift = rng.uniform(-0.004, 0.014)
+    vol = 0.03 if is_crypto else 0.014
+    drift = rng.uniform(-0.0002, 0.0007)
     p = float(base)
     prices: list[float] = []
-    for _ in range(months):
+    for _ in range(days):
         prices.append(p)
         shock = rng.gauss(0, vol)
         p = max(p * (1 + drift + shock), 0.01)
     today = datetime.utcnow().date()
-    year = today.year
-    month = today.month
-    result: list[tuple[date, float]] = []
-    for i in range(months):
-        m_offset = months - 1 - i
-        y = year
-        m = month - m_offset
-        while m <= 0:
-            m += 12
-            y -= 1
-        try:
-            d = date(y, m, 28)
-        except ValueError:
-            d = date(y, m, 1)
-        result.append((d, round(prices[i], 4)))
-    return result
+    return [
+        [
+            (today - timedelta(days=days - 1 - i)).isoformat(),
+            round(prices[i], 4),
+        ]
+        for i in range(days)
+    ]
 
 
-def _fetch_monthly_prices_yf(
+def _fetch_daily_prices_yf(
     ticker: str,
-) -> list[tuple[date, float]] | None:
+) -> list[list[str | float]] | None:
     try:
         import yfinance as yf
 
         df = yf.download(
             ticker,
-            interval="1mo",
-            start="2020-01-01",
+            period="5y",
+            interval="1d",
             progress=False,
             threads=False,
             timeout=6,
@@ -183,91 +231,49 @@ def _fetch_monthly_prices_yf(
         if df is None or df.empty:
             return None
         close = df["Close"]
-        result: list[tuple[date, float]] = []
+        result: list[list[str | float]] = []
         for idx, row in close.iterrows():
             val = float(row.iloc[0]) if hasattr(row, "iloc") else float(row)
             if math.isnan(val):
                 continue
-            d = (
-                idx.date()
-                if hasattr(idx, "date")
-                else datetime.strptime(str(idx)[:10], "%Y-%m-%d").date()
+            d_iso = (
+                idx.strftime("%Y-%m-%d")
+                if hasattr(idx, "strftime")
+                else str(idx)[:10]
             )
-            result.append((d, round(val, 4)))
+            result.append([d_iso, round(val, 4)])
         return result if result else None
     except Exception as e:
-        logging.exception(f"yfinance monthly fetch failed for {ticker}: {e}")
+        logging.exception(f"yfinance daily fetch failed for {ticker}: {e}")
         return None
 
 
-def _extract_quarter_prices(
-    monthly: list[tuple[date, float]], quarter_labels: list[str]
-) -> dict[str, float]:
-    result: dict[str, float] = {}
-    if not monthly:
-        return result
-    monthly_sorted = sorted(monthly, key=lambda x: x[0])
-    for label in quarter_labels:
-        target = _quarter_end_date(label)
-        best_price: float | None = None
-        for d, p in monthly_sorted:
-            if d.year == target.year and d.month == target.month:
-                best_price = p
-                break
-        if best_price is None:
-            for d, p in monthly_sorted:
-                if d <= target:
-                    best_price = p
-        if best_price is not None:
-            result[label] = round(best_price, 4)
+def _prices_at_boundaries(
+    daily_prices: list[list[str | float]], boundary_isos: list[str]
+) -> list[float | None]:
+    """For each boundary date, return the last known price at or before it."""
+    if not daily_prices:
+        return [None] * len(boundary_isos)
+    result: list[float | None] = []
+    for iso in boundary_isos:
+        # bisect_right on the list of [date_iso, price] pairs. Because Python
+        # compares lists lexicographically, [iso, +inf] slots after every
+        # [d, p] where d <= iso.
+        idx = bisect_right(daily_prices, [iso, float("inf")]) - 1
+        if idx < 0:
+            result.append(None)
+        else:
+            try:
+                result.append(float(daily_prices[idx][1]))
+            except (ValueError, TypeError):
+                result.append(None)
     return result
-
-
-def _compute_report_row(
-    asset: AssetRow,
-    monthly: list[tuple[date, float]],
-    quarter_labels: list[str],
-) -> ReportRow:
-    prices = _extract_quarter_prices(monthly, quarter_labels)
-    returns: dict[str, float] = {}
-    prev: float | None = None
-    for label in quarter_labels:
-        cur = prices.get(label)
-        if cur is not None and prev is not None and prev > 0:
-            returns[label] = round((cur / prev - 1) * 100, 2)
-        prev = cur if cur is not None else prev
-
-    valid_labels = [q for q in quarter_labels if q in prices]
-    cumulative = 0.0
-    cagr = 0.0
-    if len(valid_labels) >= 2:
-        first = prices[valid_labels[0]]
-        last = prices[valid_labels[-1]]
-        if first > 0:
-            cumulative = round((last / first - 1) * 100, 2)
-            start_d = _quarter_end_date(valid_labels[0])
-            end_d = _quarter_end_date(valid_labels[-1])
-            years = max((end_d - start_d).days / 365.25, 0.01)
-            if last / first > 0:
-                cagr = round(((last / first) ** (1 / years) - 1) * 100, 2)
-
-    return {
-        "ticker": asset["ticker"],
-        "sector": asset["sector"],
-        "asset_class": asset["asset_class"],
-        "name": asset["name"],
-        "quarter_prices": prices,
-        "quarter_returns": returns,
-        "cumulative": cumulative,
-        "cagr": cagr,
-        "is_positive": cumulative >= 0,
-    }
 
 
 class MarketsState(rx.State):
     universe: list[AssetRow] = ASSET_UNIVERSE
-    report_rows: list[ReportRow] = []
-    quarter_labels: list[str] = _quarter_labels(2022)
+    # daily_prices[ticker] is a list of [date_iso, price] pairs sorted by date.
+    daily_prices: dict[str, list[list[str | float]]] = {}
 
     loading: bool = False
     loaded: bool = False
@@ -281,7 +287,7 @@ class MarketsState(rx.State):
     search_query: str = ""
     filter_sector: str = "All"
     filter_class: str = "All"
-    interval: str = "5Y"
+    interval: str = "12M"
     start_date: str = ""
     end_date: str = ""
     use_custom_range: bool = False
@@ -310,113 +316,190 @@ class MarketsState(rx.State):
     def universe_size(self) -> int:
         return len(self.universe)
 
+    def _active_config(self) -> tuple[str, int, int, date]:
+        """Return (granularity, count, step, end_date) driving the columns."""
+        today = datetime.utcnow().date()
+        if self.use_custom_range and (self.start_date or self.end_date):
+            try:
+                s = (
+                    datetime.strptime(self.start_date, "%Y-%m-%d").date()
+                    if self.start_date
+                    else today - timedelta(days=365)
+                )
+            except ValueError:
+                s = today - timedelta(days=365)
+            try:
+                e = (
+                    datetime.strptime(self.end_date, "%Y-%m-%d").date()
+                    if self.end_date
+                    else today
+                )
+            except ValueError:
+                e = today
+            if e < s:
+                s, e = e, s
+            days = max((e - s).days, 1)
+            gran, count, step = _choose_custom_config(days)
+            return (gran, count, step, e)
+        gran, count, step = INTERVAL_CONFIG.get(self.interval, ("month", 12, 1))
+        return (gran, count, step, today)
+
+    def _boundary_dates(self) -> list[date]:
+        gran, count, step, end_d = self._active_config()
+        return _period_end_dates(gran, count, step, end_d)
+
+    @rx.var
+    def granularity(self) -> str:
+        gran, _, _, _ = self._active_config()
+        return gran
+
+    @rx.var
+    def granularity_adjective(self) -> str:
+        return GRANULARITY_LABELS.get(self.granularity, {}).get("adj", "period")
+
+    @rx.var
+    def granularity_period_label(self) -> str:
+        return GRANULARITY_LABELS.get(self.granularity, {}).get(
+            "period", "Period-over-period"
+        )
+
+    @rx.var
+    def granularity_unit(self) -> str:
+        return GRANULARITY_LABELS.get(self.granularity, {}).get(
+            "unit", "Period"
+        )
+
     @rx.var
     def visible_quarter_labels(self) -> list[str]:
-        labels = self.quarter_labels
-        if self.use_custom_range and (self.start_date or self.end_date):
-            start = self.start_date
-            end = self.end_date
-            filtered: list[str] = []
-            for lbl in labels:
-                d = _quarter_end_date(lbl).isoformat()
-                if start and d < start:
-                    continue
-                if end and d > end:
-                    continue
-                filtered.append(lbl)
-            return filtered if filtered else labels[-1:]
-        lookback = INTERVAL_LOOKBACK_QUARTERS.get(self.interval, 20)
-        return labels[-lookback:] if lookback < len(labels) else labels
+        gran, count, step, end_d = self._active_config()
+        boundaries = _period_end_dates(gran, count, step, end_d)
+        return [_format_period_label(gran, b) for b in boundaries[1:]]
+
+    @rx.var
+    def column_count(self) -> int:
+        return len(self.visible_quarter_labels)
+
+    @rx.var
+    def report_title(self) -> str:
+        return f"{self.granularity_unit} Returns Report"
+
+    @rx.var
+    def report_subtitle(self) -> str:
+        return (
+            f"{self.granularity_period_label} returns across "
+            f"{self.column_count} {self.granularity_adjective} periods — "
+            f"cells color-scaled from red (loss) to green (gain), with "
+            f"cumulative and CAGR summaries"
+        )
+
+    @rx.var
+    def column_summary(self) -> str:
+        return f"{self.column_count} {self.granularity_adjective} columns"
 
     @rx.var
     def filtered_rows(
         self,
     ) -> list[dict[str, str | float | bool | int | list]]:
-        q = self.search_query.strip().lower()
-        vis_labels = self.visible_quarter_labels
-        if not vis_labels:
+        gran, count, step, end_d = self._active_config()
+        boundaries = _period_end_dates(gran, count, step, end_d)
+        boundary_isos = [b.isoformat() for b in boundaries]
+        labels = [_format_period_label(gran, b) for b in boundaries[1:]]
+        if not labels:
             return []
+
+        span_days = max((boundaries[-1] - boundaries[0]).days, 1)
+        years = max(span_days / 365.25, 0.01)
+
+        q = self.search_query.strip().lower()
         rows: list[dict[str, str | float | bool | int | list]] = []
-        for r in self.report_rows:
+        for asset in self.universe:
             if (
                 self.filter_sector != "All"
-                and r["sector"] != self.filter_sector
+                and asset["sector"] != self.filter_sector
             ):
                 continue
             if (
                 self.filter_class != "All"
-                and r["asset_class"] != self.filter_class
+                and asset["asset_class"] != self.filter_class
             ):
                 continue
             if q and not (
-                q in r["ticker"].lower()
-                or q in r["name"].lower()
-                or q in r["sector"].lower()
-                or q in r["asset_class"].lower()
+                q in asset["ticker"].lower()
+                or q in asset["name"].lower()
+                or q in asset["sector"].lower()
+                or q in asset["asset_class"].lower()
             ):
                 continue
-            prices = r["quarter_prices"]
-            returns = r["quarter_returns"]
-            valid = [lbl for lbl in vis_labels if lbl in prices]
-            if len(valid) >= 2:
-                first_p = prices[valid[0]]
-                last_p = prices[valid[-1]]
-                if first_p > 0:
-                    period_cumulative = round((last_p / first_p - 1) * 100, 2)
-                    start_d = _quarter_end_date(valid[0])
-                    end_d = _quarter_end_date(valid[-1])
-                    years = max((end_d - start_d).days / 365.25, 0.01)
-                    period_cagr = (
-                        round(((last_p / first_p) ** (1 / years) - 1) * 100, 2)
-                        if last_p / first_p > 0
-                        else 0.0
-                    )
-                else:
-                    period_cumulative = 0.0
-                    period_cagr = 0.0
-            elif len(valid) == 1:
-                period_cumulative = returns.get(valid[0], 0.0)
-                period_cagr = 0.0
-            else:
-                period_cumulative = 0.0
-                period_cagr = 0.0
 
-            latest_return = 0.0
-            if valid:
-                latest_return = returns.get(valid[-1], 0.0)
+            prices_raw = self.daily_prices.get(asset["ticker"], [])
+            period_prices = _prices_at_boundaries(prices_raw, boundary_isos)
 
-            quarter_cells: list[dict[str, str | float | bool]] = []
-            for lbl in vis_labels:
-                has_ret = lbl in returns
-                val = returns.get(lbl, 0.0) if has_ret else 0.0
-                quarter_cells.append(
+            cells: list[dict[str, str | float | bool]] = []
+            for i, lbl in enumerate(labels):
+                prev_p = period_prices[i]
+                cur_p = period_prices[i + 1]
+                has_ret = (
+                    prev_p is not None and cur_p is not None and prev_p > 0
+                )
+                val = ((cur_p / prev_p - 1) * 100) if has_ret else 0.0
+                cells.append(
                     {
                         "label": lbl,
-                        "value": val,
+                        "value": round(val, 2),
                         "display": f"{val:.1f}%" if has_ret else "—",
                         "has_data": has_ret,
-                        "color_class": _color_class_for(val) if has_ret else "",
+                        "color_class": (
+                            _color_class_for(val) if has_ret else ""
+                        ),
                     }
                 )
 
-            cumulative_class = (
-                _color_class_for(period_cumulative) if valid else ""
+            first_p: float | None = None
+            for p in period_prices:
+                if p is not None:
+                    first_p = p
+                    break
+            last_p: float | None = None
+            for p in reversed(period_prices):
+                if p is not None:
+                    last_p = p
+                    break
+            has_data = (
+                first_p is not None and last_p is not None and first_p > 0
             )
+            if has_data:
+                cumulative = round((last_p / first_p - 1) * 100, 2)
+                if last_p > 0 and first_p > 0:
+                    cagr = round(
+                        ((last_p / first_p) ** (1 / years) - 1) * 100, 2
+                    )
+                else:
+                    cagr = 0.0
+            else:
+                cumulative = 0.0
+                cagr = 0.0
 
-            row: dict[str, str | float | bool | int | list] = {
-                "ticker": r["ticker"],
-                "sector": r["sector"],
-                "asset_class": r["asset_class"],
-                "name": r["name"],
-                "cumulative": period_cumulative,
-                "cumulative_class": cumulative_class,
-                "cagr": period_cagr,
-                "latest_return": latest_return,
-                "is_positive": period_cumulative >= 0,
-                "has_data": len(valid) > 0,
-                "quarter_cells": quarter_cells,
-            }
-            rows.append(row)
+            latest_return = 0.0
+            if cells and bool(cells[-1]["has_data"]):
+                latest_return = float(cells[-1]["value"])
+
+            rows.append(
+                {
+                    "ticker": asset["ticker"],
+                    "sector": asset["sector"],
+                    "asset_class": asset["asset_class"],
+                    "name": asset["name"],
+                    "cumulative": cumulative,
+                    "cumulative_class": (
+                        _color_class_for(cumulative) if has_data else ""
+                    ),
+                    "cagr": cagr,
+                    "latest_return": latest_return,
+                    "is_positive": cumulative >= 0,
+                    "has_data": has_data,
+                    "quarter_cells": cells,
+                }
+            )
 
         key = self.sort_by
         reverse = self.sort_dir == "desc"
@@ -552,14 +635,15 @@ class MarketsState(rx.State):
 
     @rx.var
     def interval_summary(self) -> str:
+        col_summary = self.column_summary
         if self.use_custom_range and (self.start_date or self.end_date):
             s = self.start_date or "start"
             e = self.end_date or "today"
-            return f"Custom range: {s} → {e}"
+            return f"Custom: {s} → {e} · {col_summary}"
         for k, label in INTERVAL_LABELS:
             if k == self.interval:
-                return f"Preset: {label}"
-        return "Preset: 5 Years"
+                return f"Preset: {label} · {col_summary}"
+        return f"Preset · {col_summary}"
 
     @rx.event
     def set_search(self, v: str):
@@ -575,6 +659,8 @@ class MarketsState(rx.State):
 
     @rx.event
     def set_interval(self, v: str):
+        if v not in INTERVAL_CONFIG:
+            v = "12M"
         self.interval = v
         self.use_custom_range = False
         self.start_date = ""
@@ -611,7 +697,7 @@ class MarketsState(rx.State):
         self.search_query = ""
         self.filter_sector = "All"
         self.filter_class = "All"
-        self.interval = "5Y"
+        self.interval = "12M"
         self.start_date = ""
         self.end_date = ""
         self.use_custom_range = False
@@ -619,31 +705,29 @@ class MarketsState(rx.State):
     @rx.event(background=True)
     async def load_report(self):
         async with self:
-            if self.loaded and self.report_rows:
+            if self.loaded and self.daily_prices:
                 return
             self.loading = True
             self.status_message = (
-                f"Loading market data for {len(self.universe)} tickers…"
+                f"Loading daily market data for {len(self.universe)} tickers…"
             )
             self.error_message = ""
             universe = list(self.universe)
-            labels = list(self.quarter_labels)
 
-        rows: list[ReportRow] = []
+        daily_map: dict[str, list[list[str | float]]] = {}
         live = 0
         fallback = 0
         for asset in universe:
-            monthly = _fetch_monthly_prices_yf(asset["ticker"])
-            if monthly and len(monthly) >= 4:
+            prices = _fetch_daily_prices_yf(asset["ticker"])
+            if prices and len(prices) >= 30:
                 live += 1
             else:
-                monthly = _synthetic_monthly_prices(asset["ticker"], months=72)
+                prices = _synthetic_daily_prices(asset["ticker"], days=1825)
                 fallback += 1
-            row = _compute_report_row(asset, monthly, labels)
-            rows.append(row)
+            daily_map[asset["ticker"]] = prices
 
         async with self:
-            self.report_rows = rows
+            self.daily_prices = daily_map
             self.live_count = live
             self.fallback_count = fallback
             self.loaded = True
@@ -654,7 +738,7 @@ class MarketsState(rx.State):
             if live > 0 and fallback == 0:
                 self.data_source = "live"
                 self.status_message = (
-                    f"Live data from Yahoo Finance for all {live} tickers"
+                    f"Live daily data from Yahoo Finance for all {live} tickers"
                 )
             elif live > 0 and fallback > 0:
                 self.data_source = "mixed"
@@ -665,13 +749,13 @@ class MarketsState(rx.State):
             else:
                 self.data_source = "cached"
                 self.status_message = (
-                    f"Using cached synthetic data for {fallback} tickers "
-                    f"(network unavailable)"
+                    f"Using cached synthetic daily data for "
+                    f"{fallback} tickers (network unavailable)"
                 )
 
     @rx.event(background=True)
     async def refresh_report(self):
         async with self:
             self.loaded = False
-            self.report_rows = []
+            self.daily_prices = {}
         return MarketsState.load_report

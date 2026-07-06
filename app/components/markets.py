@@ -663,13 +663,16 @@ def _returns_table() -> rx.Component:
         rx.el.div(
             rx.el.div(
                 rx.el.h3(
-                    "Quarterly Returns Report",
+                    MarketsState.report_title,
                     class_name="text-sm font-semibold text-gray-900",
                 ),
                 rx.el.p(
-                    "Quarter-over-quarter returns with cumulative and CAGR — "
-                    "cells are color-scaled from red (loss) to green (gain)",
+                    MarketsState.report_subtitle,
                     class_name="text-xs text-gray-500 mt-0.5",
+                ),
+                rx.el.p(
+                    MarketsState.column_summary,
+                    class_name="text-[11px] text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-0.5 mt-1.5 w-fit font-medium",
                 ),
             ),
             rx.el.div(
@@ -772,8 +775,11 @@ def _empty_state() -> rx.Component:
             class_name="text-base font-semibold text-gray-900",
         ),
         rx.el.p(
-            f"Analyzing {MarketsState.universe_size} tickers across sectors and asset classes. "
-            "Live data is fetched via Yahoo Finance with cached synthetic fallback for resilience.",
+            f"Analyzing {MarketsState.universe_size} tickers with daily prices "
+            "across sectors and asset classes. Live data is fetched via Yahoo "
+            "Finance with cached synthetic fallback for resilience. Column "
+            "granularity (daily, weekly, monthly, or quarterly) adapts to your "
+            "selected time range.",
             class_name="text-sm text-gray-500 mt-1 max-w-md text-center",
         ),
         rx.cond(

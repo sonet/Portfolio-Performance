@@ -45,3 +45,19 @@
 - [x] Apply a distinctive non-standard palette with deep ink surfaces, aurora violet/cyan accents, mint success states, coral warning/loss states, and readable contrast throughout.
 - [x] Preserve all existing page structure, data flows, filters, event behavior, responsive layouts, and accessibility affordances.
 - [x] Validate that tables, badges, inputs, charts, and color-scaled performance cells remain readable in the dark theme.
+
+## Phase 9: Auth Foundation and Access Flow
+- [ ] Add an auth landing experience with sign-in, registration guidance, and Google sign-in entry points in the dark aurora visual style.
+- [ ] Add protected-app routing behavior so unauthenticated visitors see the auth experience and authenticated users see the portfolio dashboard.
+- [ ] Add user identity display, account menu actions, and logout access in desktop and mobile navigation.
+- [ ] Preserve all portfolio, markets, transactions, import, and settings behavior after auth gating.
+
+## Phase 10: Google Auth Provider Integration
+- [ ] Configure Google OIDC sign-in with secure redirect handling and user profile hydration.
+- [ ] Add clear loading, signed-out, signed-in, and auth-error states around Google authentication.
+- [ ] Validate the auth redirect URLs, login flow entry point, and logout flow expectations.
+
+## Phase 11: Auth Polish and Validation
+- [ ] Add account onboarding copy and profile-aware UI details using authenticated user fields.
+- [ ] Validate route protection behavior and non-auth state flows without retesting completed portfolio logic.
+- [ ] Ensure auth UI remains responsive, accessible, and visually consistent with the dark theme.

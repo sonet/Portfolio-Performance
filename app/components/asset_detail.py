@@ -11,8 +11,8 @@ def _range_pill(label: str) -> rx.Component:
         on_click=lambda: MarketState.set_range(label),
         class_name=rx.cond(
             is_active,
-            "px-3 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white border border-blue-600",
-            "px-3 py-1 rounded-md text-xs font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-50",
+            "px-3 py-1 rounded-md text-xs font-semibold bg-violet-600 text-white border border-violet-500 shadow-[0_0_12px_-4px_rgba(139,92,246,0.6)]",
+            "px-3 py-1 rounded-md text-xs font-medium bg-slate-900/60 text-slate-300 border border-slate-700 hover:border-violet-500/50",
         ),
         type="button",
     )
@@ -25,14 +25,14 @@ def _kpi(
         rx.el.div(
             rx.el.p(
                 label,
-                class_name="text-[11px] font-medium text-gray-500 uppercase tracking-wide",
+                class_name="text-[11px] font-medium text-slate-500 uppercase tracking-wide",
             ),
-            rx.icon(icon, class_name="h-3.5 w-3.5 text-gray-400"),
+            rx.icon(icon, class_name="h-3.5 w-3.5 text-slate-500"),
             class_name="flex items-center justify-between mb-1.5",
         ),
         value,
         sub,
-        class_name="bg-white border border-gray-200 rounded-xl p-4",
+        class_name="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl p-4",
     )
 
 
@@ -44,11 +44,11 @@ def _status_bar() -> rx.Component:
                 rx.el.div(
                     rx.icon(
                         "loader-circle",
-                        class_name="h-3.5 w-3.5 text-blue-600 animate-spin",
+                        class_name="h-3.5 w-3.5 text-violet-400 animate-spin",
                     ),
                     rx.el.p(
                         MarketState.status_message,
-                        class_name="text-xs font-medium text-gray-700",
+                        class_name="text-xs font-medium text-slate-300",
                     ),
                     class_name="flex items-center gap-2",
                 ),
@@ -56,13 +56,13 @@ def _status_bar() -> rx.Component:
                     rx.el.span(
                         class_name=rx.cond(
                             MarketState.data_source == "live",
-                            "h-2 w-2 rounded-full bg-emerald-500",
-                            "h-2 w-2 rounded-full bg-amber-500",
+                            "h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]",
+                            "h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]",
                         ),
                     ),
                     rx.el.p(
                         MarketState.status_message,
-                        class_name="text-xs font-medium text-gray-700",
+                        class_name="text-xs font-medium text-slate-300",
                     ),
                     class_name="flex items-center gap-2",
                 ),
@@ -71,13 +71,13 @@ def _status_bar() -> rx.Component:
                 MarketState.last_updated != "",
                 rx.el.p(
                     f"Updated {MarketState.last_updated}",
-                    class_name="text-[11px] text-gray-400 font-mono",
+                    class_name="text-[11px] text-slate-500 font-mono",
                 ),
                 rx.el.div(),
             ),
             class_name="flex items-center justify-between",
         ),
-        class_name="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 mb-4",
+        class_name="bg-slate-900/60 border border-slate-800/80 rounded-lg px-3 py-2 mb-4",
     )
 
 
@@ -87,11 +87,11 @@ def _price_chart() -> rx.Component:
             rx.el.div(
                 rx.el.h3(
                     "Price Performance",
-                    class_name="text-sm font-semibold text-gray-900",
+                    class_name="text-sm font-semibold text-slate-100",
                 ),
                 rx.el.p(
                     "Indexed to 100 vs. S&P 500 benchmark",
-                    class_name="text-xs text-gray-500 mt-0.5",
+                    class_name="text-xs text-slate-500 mt-0.5",
                 ),
             ),
             rx.el.div(
@@ -107,21 +107,21 @@ def _price_chart() -> rx.Component:
             rx.el.div(
                 rx.el.div(
                     rx.el.span(
-                        class_name="h-2.5 w-2.5 rounded-full bg-blue-600"
+                        class_name="h-2.5 w-2.5 rounded-full bg-violet-400"
                     ),
                     rx.el.span(
                         MarketState.current_symbol,
-                        class_name="text-xs font-medium text-gray-700",
+                        class_name="text-xs font-medium text-slate-300",
                     ),
                     class_name="flex items-center gap-1.5",
                 ),
                 rx.el.div(
                     rx.el.span(
-                        class_name="h-2.5 w-2.5 rounded-full bg-gray-400"
+                        class_name="h-2.5 w-2.5 rounded-full bg-cyan-400"
                     ),
                     rx.el.span(
                         "S&P 500",
-                        class_name="text-xs font-medium text-gray-700",
+                        class_name="text-xs font-medium text-slate-300",
                     ),
                     class_name="flex items-center gap-1.5",
                 ),
@@ -137,19 +137,19 @@ def _price_chart() -> rx.Component:
                     rx.recharts.area(
                         data_key="benchmark_indexed",
                         name="S&P 500",
-                        stroke="#94a3b8",
-                        fill="#94a3b8",
-                        fill_opacity=0.1,
-                        stroke_width=1,
+                        stroke="#22d3ee",
+                        fill="#22d3ee",
+                        fill_opacity=0.08,
+                        stroke_width=1.5,
                         type_="monotone",
                         dot=False,
                     ),
                     rx.recharts.area(
                         data_key="asset_indexed",
                         name=MarketState.current_symbol,
-                        stroke="#2563eb",
-                        fill="#2563eb",
-                        fill_opacity=0.15,
+                        stroke="#a78bfa",
+                        fill="#a78bfa",
+                        fill_opacity=0.18,
                         stroke_width=2,
                         type_="monotone",
                         dot=False,
@@ -177,17 +177,17 @@ def _price_chart() -> rx.Component:
                 rx.el.div(
                     rx.icon(
                         "chart-line",
-                        class_name="h-8 w-8 text-gray-300 mb-2",
+                        class_name="h-8 w-8 text-slate-600 mb-2",
                     ),
                     rx.el.p(
                         "Loading price data…",
-                        class_name="text-sm text-gray-500",
+                        class_name="text-sm text-slate-500",
                     ),
                     class_name="flex flex-col items-center justify-center h-[320px]",
                 ),
             ),
         ),
-        class_name="bg-white border border-gray-200 rounded-xl p-5",
+        class_name="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl p-5",
     )
 
 
@@ -198,9 +198,9 @@ def _position_card() -> rx.Component:
         rx.el.div(
             rx.el.h3(
                 "Your Position",
-                class_name="text-sm font-semibold text-gray-900",
+                class_name="text-sm font-semibold text-slate-100",
             ),
-            rx.icon("wallet", class_name="h-4 w-4 text-gray-400"),
+            rx.icon("wallet", class_name="h-4 w-4 text-violet-400"),
             class_name="flex items-center justify-between mb-4",
         ),
         rx.foreach(
@@ -212,52 +212,52 @@ def _position_card() -> rx.Component:
                         rx.el.div(
                             rx.el.p(
                                 "Quantity",
-                                class_name="text-[11px] text-gray-500 uppercase tracking-wide",
+                                class_name="text-[11px] text-slate-500 uppercase tracking-wide",
                             ),
                             rx.el.p(
                                 f"{h['quantity'].to(float):,.4f}",
-                                class_name="text-sm font-semibold text-gray-900 font-mono mt-0.5",
+                                class_name="text-sm font-semibold text-slate-100 font-mono mt-0.5",
                             ),
                         ),
                         rx.el.div(
                             rx.el.p(
                                 "Cost Basis",
-                                class_name="text-[11px] text-gray-500 uppercase tracking-wide",
+                                class_name="text-[11px] text-slate-500 uppercase tracking-wide",
                             ),
                             rx.el.p(
                                 f"${h['cost_basis'].to(float):,.2f}",
-                                class_name="text-sm font-semibold text-gray-900 font-mono mt-0.5",
+                                class_name="text-sm font-semibold text-slate-100 font-mono mt-0.5",
                             ),
                         ),
                         rx.el.div(
                             rx.el.p(
                                 "Market Value",
-                                class_name="text-[11px] text-gray-500 uppercase tracking-wide",
+                                class_name="text-[11px] text-slate-500 uppercase tracking-wide",
                             ),
                             rx.el.p(
                                 f"${h['market_value'].to(float):,.2f}",
-                                class_name="text-sm font-semibold text-gray-900 font-mono mt-0.5",
+                                class_name="text-sm font-semibold text-slate-100 font-mono mt-0.5",
                             ),
                         ),
                         rx.el.div(
                             rx.el.p(
                                 "P&L",
-                                class_name="text-[11px] text-gray-500 uppercase tracking-wide",
+                                class_name="text-[11px] text-slate-500 uppercase tracking-wide",
                             ),
                             rx.el.p(
                                 f"${h['gain'].to(float):,.2f}",
                                 class_name=rx.cond(
                                     h["is_gain"],
-                                    "text-sm font-semibold text-emerald-600 font-mono mt-0.5",
-                                    "text-sm font-semibold text-red-600 font-mono mt-0.5",
+                                    "text-sm font-semibold text-emerald-400 font-mono mt-0.5",
+                                    "text-sm font-semibold text-rose-400 font-mono mt-0.5",
                                 ),
                             ),
                             rx.el.p(
                                 f"{h['gain_pct'].to(float):.2f}%",
                                 class_name=rx.cond(
                                     h["is_gain"],
-                                    "text-[11px] font-medium text-emerald-600",
-                                    "text-[11px] font-medium text-red-600",
+                                    "text-[11px] font-medium text-emerald-400",
+                                    "text-[11px] font-medium text-rose-400",
                                 ),
                             ),
                         ),
@@ -267,42 +267,37 @@ def _position_card() -> rx.Component:
                         rx.el.div(
                             rx.el.p(
                                 "Portfolio Contribution",
-                                class_name="text-[11px] text-gray-500 uppercase tracking-wide",
+                                class_name="text-[11px] text-slate-500 uppercase tracking-wide",
                             ),
                             rx.el.p(
                                 f"{h['allocation'].to(float):.2f}%",
-                                class_name="text-sm font-semibold text-blue-700 font-mono",
+                                class_name="text-sm font-semibold text-violet-300 font-mono",
                             ),
                             class_name="flex items-center justify-between mb-1.5",
                         ),
                         rx.el.div(
                             rx.el.div(
-                                class_name="h-full bg-blue-500 rounded-full",
+                                class_name="h-full bg-violet-500 rounded-full",
                                 style={"width": f"{h['allocation']}%"},
                             ),
-                            class_name="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden",
+                            class_name="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden",
                         ),
-                        class_name="mt-4 pt-4 border-t border-gray-100",
+                        class_name="mt-4 pt-4 border-t border-slate-800",
                     ),
                     class_name="",
                 ),
                 rx.el.div(),
             ),
         ),
-        rx.cond(
-            PortfolioState.enriched_holdings.contains(sym).to(bool) | (True),
-            rx.el.div(),
-            rx.el.div(),
-        ),
-        class_name="bg-white border border-gray-200 rounded-xl p-5",
+        class_name="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl p-5",
     )
 
 
 def _range_summary_row(label: str, value: rx.Component) -> rx.Component:
     return rx.el.div(
-        rx.el.p(label, class_name="text-xs text-gray-500"),
+        rx.el.p(label, class_name="text-xs text-slate-500"),
         value,
-        class_name="flex items-center justify-between py-2 border-b border-gray-100 last:border-0",
+        class_name="flex items-center justify-between py-2 border-b border-slate-800/60 last:border-0",
     )
 
 
@@ -311,23 +306,23 @@ def _range_summary() -> rx.Component:
     return rx.el.div(
         rx.el.div(
             rx.el.h3(
-                "Key Metrics", class_name="text-sm font-semibold text-gray-900"
+                "Key Metrics", class_name="text-sm font-semibold text-slate-100"
             ),
-            rx.icon("gauge", class_name="h-4 w-4 text-gray-400"),
+            rx.icon("gauge", class_name="h-4 w-4 text-cyan-400"),
             class_name="flex items-center justify-between mb-3",
         ),
         _range_summary_row(
             "52-Week High",
             rx.el.p(
                 f"${a['week_high_52'].to(float):,.2f}",
-                class_name="text-sm font-semibold text-gray-900 font-mono",
+                class_name="text-sm font-semibold text-slate-100 font-mono",
             ),
         ),
         _range_summary_row(
             "52-Week Low",
             rx.el.p(
                 f"${a['week_low_52'].to(float):,.2f}",
-                class_name="text-sm font-semibold text-gray-900 font-mono",
+                class_name="text-sm font-semibold text-slate-100 font-mono",
             ),
         ),
         _range_summary_row(
@@ -336,8 +331,8 @@ def _range_summary() -> rx.Component:
                 f"{a['year_change_pct'].to(float):.2f}%",
                 class_name=rx.cond(
                     a["year_change_pct"].to(float) >= 0,
-                    "text-sm font-semibold text-emerald-600 font-mono",
-                    "text-sm font-semibold text-red-600 font-mono",
+                    "text-sm font-semibold text-emerald-400 font-mono",
+                    "text-sm font-semibold text-rose-400 font-mono",
                 ),
             ),
         ),
@@ -345,17 +340,17 @@ def _range_summary() -> rx.Component:
             "Annualized Volatility",
             rx.el.p(
                 f"{a['volatility'].to(float):.2f}%",
-                class_name="text-sm font-semibold text-gray-900 font-mono",
+                class_name="text-sm font-semibold text-slate-100 font-mono",
             ),
         ),
         _range_summary_row(
             "Prev. Close",
             rx.el.p(
                 f"${a['prev_close'].to(float):,.2f}",
-                class_name="text-sm font-semibold text-gray-900 font-mono",
+                class_name="text-sm font-semibold text-slate-100 font-mono",
             ),
         ),
-        class_name="bg-white border border-gray-200 rounded-xl p-5",
+        class_name="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl p-5",
     )
 
 
@@ -369,24 +364,24 @@ def asset_detail_content() -> rx.Component:
                     rx.icon("arrow-left", class_name="h-3.5 w-3.5"),
                     "Back to Discover",
                     href="/discover",
-                    class_name="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-900 mb-3",
+                    class_name="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-slate-100 mb-3",
                 ),
                 rx.el.div(
                     rx.el.div(
                         rx.el.h2(
                             MarketState.current_symbol,
-                            class_name="text-3xl font-bold text-gray-900 tracking-tight",
+                            class_name="text-3xl font-bold text-slate-100 tracking-tight",
                         ),
                         rx.el.p(
                             a["name"],
-                            class_name="text-sm text-gray-600 mt-0.5",
+                            class_name="text-sm text-slate-400 mt-0.5",
                         ),
                         class_name="",
                     ),
                     rx.el.div(
                         rx.el.p(
                             f"${a['latest_price'].to(float):,.2f}",
-                            class_name="text-3xl font-bold text-gray-900 font-mono tracking-tight",
+                            class_name="text-3xl font-bold text-slate-100 font-mono tracking-tight",
                         ),
                         rx.el.div(
                             rx.icon(
@@ -406,8 +401,8 @@ def asset_detail_content() -> rx.Component:
                             ),
                             class_name=rx.cond(
                                 a["is_up"],
-                                "flex items-center gap-1.5 text-sm font-semibold text-emerald-600 mt-1 justify-end",
-                                "flex items-center gap-1.5 text-sm font-semibold text-red-600 mt-1 justify-end",
+                                "flex items-center gap-1.5 text-sm font-semibold text-emerald-400 mt-1 justify-end",
+                                "flex items-center gap-1.5 text-sm font-semibold text-rose-400 mt-1 justify-end",
                             ),
                         ),
                         class_name="text-right",
@@ -424,13 +419,13 @@ def asset_detail_content() -> rx.Component:
                     f"{a['day_change_pct'].to(float):.2f}%",
                     class_name=rx.cond(
                         a["is_up"],
-                        "text-xl font-semibold text-emerald-600",
-                        "text-xl font-semibold text-red-600",
+                        "text-xl font-semibold text-emerald-400",
+                        "text-xl font-semibold text-rose-400",
                     ),
                 ),
                 rx.el.p(
                     f"${a['day_change'].to(float):,.2f}",
-                    class_name="text-xs text-gray-500 font-mono",
+                    class_name="text-xs text-slate-500 font-mono",
                 ),
                 "activity",
             ),
@@ -440,12 +435,12 @@ def asset_detail_content() -> rx.Component:
                     f"{a['year_change_pct'].to(float):.2f}%",
                     class_name=rx.cond(
                         a["year_change_pct"].to(float) >= 0,
-                        "text-xl font-semibold text-emerald-600",
-                        "text-xl font-semibold text-red-600",
+                        "text-xl font-semibold text-emerald-400",
+                        "text-xl font-semibold text-rose-400",
                     ),
                 ),
                 rx.el.p(
-                    "Trailing 12 months", class_name="text-xs text-gray-500"
+                    "Trailing 12 months", class_name="text-xs text-slate-500"
                 ),
                 "trending-up",
             ),
@@ -453,18 +448,18 @@ def asset_detail_content() -> rx.Component:
                 "52W Range",
                 rx.el.p(
                     f"${a['week_low_52'].to(float):,.2f} — ${a['week_high_52'].to(float):,.2f}",
-                    class_name="text-sm font-semibold text-gray-900 font-mono",
+                    class_name="text-sm font-semibold text-slate-100 font-mono",
                 ),
-                rx.el.p("Low / High", class_name="text-xs text-gray-500 mt-1"),
+                rx.el.p("Low / High", class_name="text-xs text-slate-500 mt-1"),
                 "arrow_up_down",
             ),
             _kpi(
                 "Volatility",
                 rx.el.p(
                     f"{a['volatility'].to(float):.2f}%",
-                    class_name="text-xl font-semibold text-gray-900",
+                    class_name="text-xl font-semibold text-slate-100",
                 ),
-                rx.el.p("Annualized", class_name="text-xs text-gray-500"),
+                rx.el.p("Annualized", class_name="text-xs text-slate-500"),
                 "waves",
             ),
             class_name="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4",

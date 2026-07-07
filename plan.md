@@ -40,8 +40,8 @@
 - [x] Update the report table labeling and empty states so users understand the active interval granularity.
 - [x] Validate examples including 12 months, 10 days, 10 weeks, 30 days, and 3 years.
 
-## Phase 8: Dark Theme Visual Refresh
-- [ ] Convert the full application shell, navigation, cards, tables, forms, charts, status bars, and empty states to a cohesive dark theme.
-- [ ] Apply a distinctive non-standard palette with deep ink surfaces, aurora violet/cyan accents, mint success states, coral warning/loss states, and readable contrast throughout.
-- [ ] Preserve all existing page structure, data flows, filters, event behavior, responsive layouts, and accessibility affordances.
-- [ ] Validate that tables, badges, inputs, charts, and color-scaled performance cells remain readable in the dark theme.
+## Phase 8: Dark Theme Visual Refresh ✅
+- [x] Convert the full application shell, navigation, cards, tables, forms, charts, status bars, and empty states to a cohesive dark theme.
+- [x] Apply a distinctive non-standard palette with deep ink surfaces, aurora violet/cyan accents, mint success states, coral warning/loss states, and readable contrast throughout.
+- [x] Preserve all existing page structure, data flows, filters, event behavior, responsive layouts, and accessibility affordances.
+- [x] Validate that tables, badges, inputs, charts, and color-scaled performance cells remain readable in the dark theme.

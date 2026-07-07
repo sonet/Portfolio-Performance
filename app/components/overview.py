@@ -10,7 +10,7 @@ def _kpi_card(
             rx.el.div(
                 rx.el.p(
                     label,
-                    class_name="text-xs font-medium text-gray-500 uppercase tracking-wide",
+                    class_name="text-xs font-medium text-slate-500 uppercase tracking-wide",
                 ),
                 value,
                 sub,
@@ -22,7 +22,7 @@ def _kpi_card(
             ),
             class_name="flex items-start justify-between",
         ),
-        class_name="bg-white border border-gray-200 rounded-xl p-5",
+        class_name="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl p-5 hover:border-violet-500/30 transition-colors",
     )
 
 
@@ -32,7 +32,7 @@ def kpi_grid() -> rx.Component:
             "Total Value",
             rx.el.p(
                 f"${PortfolioState.total_value:,.2f}",
-                class_name="text-2xl font-semibold text-gray-900",
+                class_name="text-2xl font-semibold text-slate-100",
             ),
             rx.el.p(
                 rx.cond(
@@ -40,10 +40,10 @@ def kpi_grid() -> rx.Component:
                     f"{PortfolioState.holdings_count} holdings",
                     "No holdings",
                 ),
-                class_name="text-xs text-gray-500",
+                class_name="text-xs text-slate-500",
             ),
             "wallet",
-            "bg-blue-50 text-blue-600",
+            "bg-violet-500/15 text-violet-300 border border-violet-500/30",
         ),
         _kpi_card(
             "Total Gain/Loss",
@@ -51,8 +51,8 @@ def kpi_grid() -> rx.Component:
                 f"${PortfolioState.total_gain:,.2f}",
                 class_name=rx.cond(
                     PortfolioState.total_gain >= 0,
-                    "text-2xl font-semibold text-emerald-600",
-                    "text-2xl font-semibold text-red-600",
+                    "text-2xl font-semibold text-emerald-400",
+                    "text-2xl font-semibold text-rose-400",
                 ),
             ),
             rx.el.div(
@@ -67,26 +67,26 @@ def kpi_grid() -> rx.Component:
                 rx.el.span(f"{PortfolioState.total_gain_pct:.2f}%"),
                 class_name=rx.cond(
                     PortfolioState.total_gain >= 0,
-                    "flex items-center gap-1 text-xs font-medium text-emerald-600",
-                    "flex items-center gap-1 text-xs font-medium text-red-600",
+                    "flex items-center gap-1 text-xs font-medium text-emerald-400",
+                    "flex items-center gap-1 text-xs font-medium text-rose-400",
                 ),
             ),
             "chart-line",
             rx.cond(
                 PortfolioState.total_gain >= 0,
-                "bg-emerald-50 text-emerald-600",
-                "bg-red-50 text-red-600",
+                "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+                "bg-rose-500/15 text-rose-300 border border-rose-500/30",
             ),
         ),
         _kpi_card(
             "Cost Basis",
             rx.el.p(
                 f"${PortfolioState.total_cost:,.2f}",
-                class_name="text-2xl font-semibold text-gray-900",
+                class_name="text-2xl font-semibold text-slate-100",
             ),
-            rx.el.p("Total invested", class_name="text-xs text-gray-500"),
+            rx.el.p("Total invested", class_name="text-xs text-slate-500"),
             "landmark",
-            "bg-slate-100 text-slate-600",
+            "bg-slate-800 text-slate-300 border border-slate-700",
         ),
         _kpi_card(
             "Today's Change",
@@ -94,8 +94,8 @@ def kpi_grid() -> rx.Component:
                 f"${PortfolioState.daily_change:,.2f}",
                 class_name=rx.cond(
                     PortfolioState.daily_change >= 0,
-                    "text-2xl font-semibold text-emerald-600",
-                    "text-2xl font-semibold text-red-600",
+                    "text-2xl font-semibold text-emerald-400",
+                    "text-2xl font-semibold text-rose-400",
                 ),
             ),
             rx.el.div(
@@ -110,15 +110,15 @@ def kpi_grid() -> rx.Component:
                 rx.el.span(f"{PortfolioState.daily_change_pct:.2f}%"),
                 class_name=rx.cond(
                     PortfolioState.daily_change >= 0,
-                    "flex items-center gap-1 text-xs font-medium text-emerald-600",
-                    "flex items-center gap-1 text-xs font-medium text-red-600",
+                    "flex items-center gap-1 text-xs font-medium text-emerald-400",
+                    "flex items-center gap-1 text-xs font-medium text-rose-400",
                 ),
             ),
             "activity",
             rx.cond(
                 PortfolioState.daily_change >= 0,
-                "bg-emerald-50 text-emerald-600",
-                "bg-red-50 text-red-600",
+                "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30",
+                "bg-rose-500/15 text-rose-300 border border-rose-500/30",
             ),
         ),
         class_name="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4",
@@ -134,18 +134,19 @@ def _allocation_row(item: rx.Var) -> rx.Component:
                     style={"backgroundColor": item["fill"]},
                 ),
                 rx.el.p(
-                    item["name"], class_name="text-sm font-medium text-gray-900"
+                    item["name"],
+                    class_name="text-sm font-medium text-slate-200",
                 ),
                 class_name="flex items-center gap-2",
             ),
             rx.el.div(
                 rx.el.p(
                     f"${item['value'].to(float):,.2f}",
-                    class_name="text-sm font-medium text-gray-900",
+                    class_name="text-sm font-medium text-slate-100 font-mono",
                 ),
                 rx.el.p(
                     f"{item['pct'].to(float):.1f}%",
-                    class_name="text-xs text-gray-500",
+                    class_name="text-xs text-slate-500",
                 ),
                 class_name="text-right",
             ),
@@ -159,7 +160,7 @@ def _allocation_row(item: rx.Var) -> rx.Component:
                     "backgroundColor": item["fill"],
                 },
             ),
-            class_name="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden",
+            class_name="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden",
         ),
         class_name="mb-3",
     )
@@ -171,20 +172,20 @@ def allocation_card() -> rx.Component:
             rx.el.div(
                 rx.el.h3(
                     "Asset Allocation",
-                    class_name="text-sm font-semibold text-gray-900",
+                    class_name="text-sm font-semibold text-slate-100",
                 ),
                 rx.el.p(
                     "Distribution across asset classes",
-                    class_name="text-xs text-gray-500 mt-0.5",
+                    class_name="text-xs text-slate-500 mt-0.5",
                 ),
             ),
-            rx.icon("chart-pie", class_name="h-4 w-4 text-gray-400"),
+            rx.icon("chart-pie", class_name="h-4 w-4 text-violet-400"),
             class_name="flex items-start justify-between mb-5",
         ),
         rx.el.div(
             rx.foreach(PortfolioState.allocation_by_class, _allocation_row),
         ),
-        class_name="bg-white border border-gray-200 rounded-xl p-5",
+        class_name="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl p-5",
     )
 
 
@@ -194,17 +195,17 @@ def _mover_row(h: rx.Var) -> rx.Component:
             rx.el.div(
                 rx.el.p(
                     h["symbol"],
-                    class_name="text-sm font-semibold text-gray-900",
+                    class_name="text-sm font-semibold text-slate-100",
                 ),
                 rx.el.p(
                     h["name"],
-                    class_name="text-xs text-gray-500 truncate max-w-[140px]",
+                    class_name="text-xs text-slate-500 truncate max-w-[140px]",
                 ),
             ),
             rx.el.div(
                 rx.el.p(
                     f"${h['current_price'].to(float):,.2f}",
-                    class_name="text-sm font-medium text-gray-900",
+                    class_name="text-sm font-medium text-slate-100 font-mono",
                 ),
                 rx.el.div(
                     rx.icon(
@@ -216,15 +217,15 @@ def _mover_row(h: rx.Var) -> rx.Component:
                     rx.el.span(f"{h['day_pct'].to(float):.2f}%"),
                     class_name=rx.cond(
                         h["is_day_gain"],
-                        "flex items-center gap-1 text-xs font-medium text-emerald-600 justify-end",
-                        "flex items-center gap-1 text-xs font-medium text-red-600 justify-end",
+                        "flex items-center gap-1 text-xs font-medium text-emerald-400 justify-end",
+                        "flex items-center gap-1 text-xs font-medium text-rose-400 justify-end",
                     ),
                 ),
                 class_name="text-right",
             ),
             class_name="flex items-center justify-between",
         ),
-        class_name="py-3 border-b border-gray-100 last:border-0",
+        class_name="py-3 border-b border-slate-800/60 last:border-0",
     )
 
 
@@ -234,42 +235,44 @@ def top_movers_card() -> rx.Component:
             rx.el.div(
                 rx.el.h3(
                     "Top Movers",
-                    class_name="text-sm font-semibold text-gray-900",
+                    class_name="text-sm font-semibold text-slate-100",
                 ),
                 rx.el.p(
                     "Biggest daily changes",
-                    class_name="text-xs text-gray-500 mt-0.5",
+                    class_name="text-xs text-slate-500 mt-0.5",
                 ),
             ),
-            rx.icon("zap", class_name="h-4 w-4 text-gray-400"),
+            rx.icon("zap", class_name="h-4 w-4 text-amber-400"),
             class_name="flex items-start justify-between mb-2",
         ),
         rx.el.div(rx.foreach(PortfolioState.top_movers, _mover_row)),
-        class_name="bg-white border border-gray-200 rounded-xl p-5",
+        class_name="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl p-5",
     )
 
 
 def _activity_row(a: rx.Var) -> rx.Component:
     return rx.el.div(
         rx.el.div(
-            rx.icon(a["icon"], class_name="h-4 w-4 text-gray-600"),
-            class_name="h-9 w-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0",
+            rx.icon(a["icon"], class_name="h-4 w-4 text-cyan-300"),
+            class_name="h-9 w-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0",
         ),
         rx.el.div(
             rx.el.div(
                 rx.el.p(
-                    a["type"], class_name="text-sm font-medium text-gray-900"
+                    a["type"], class_name="text-sm font-medium text-slate-100"
                 ),
                 rx.el.span(
                     a["symbol"],
-                    class_name="text-xs font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded",
+                    class_name="text-xs font-medium text-violet-300 bg-violet-500/15 border border-violet-500/30 px-1.5 py-0.5 rounded",
                 ),
                 class_name="flex items-center gap-2",
             ),
-            rx.el.p(a["detail"], class_name="text-xs text-gray-500 mt-0.5"),
+            rx.el.p(a["detail"], class_name="text-xs text-slate-500 mt-0.5"),
         ),
-        rx.el.p(a["time"], class_name="text-xs text-gray-400 shrink-0 ml-auto"),
-        class_name="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0",
+        rx.el.p(
+            a["time"], class_name="text-xs text-slate-600 shrink-0 ml-auto"
+        ),
+        class_name="flex items-center gap-3 py-3 border-b border-slate-800/60 last:border-0",
     )
 
 
@@ -279,43 +282,43 @@ def activity_card() -> rx.Component:
             rx.el.div(
                 rx.el.h3(
                     "Recent Activity",
-                    class_name="text-sm font-semibold text-gray-900",
+                    class_name="text-sm font-semibold text-slate-100",
                 ),
                 rx.el.p(
                     "Latest transactions and events",
-                    class_name="text-xs text-gray-500 mt-0.5",
+                    class_name="text-xs text-slate-500 mt-0.5",
                 ),
             ),
-            rx.icon("history", class_name="h-4 w-4 text-gray-400"),
+            rx.icon("history", class_name="h-4 w-4 text-cyan-400"),
             class_name="flex items-start justify-between mb-2",
         ),
         rx.el.div(rx.foreach(PortfolioState.recent_activity, _activity_row)),
-        class_name="bg-white border border-gray-200 rounded-xl p-5",
+        class_name="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl p-5",
     )
 
 
 def _empty_portfolio_state() -> rx.Component:
     return rx.el.div(
         rx.el.div(
-            rx.icon("wallet", class_name="h-8 w-8 text-blue-600"),
-            class_name="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center mb-3",
+            rx.icon("wallet", class_name="h-8 w-8 text-violet-300"),
+            class_name="h-14 w-14 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center mb-3",
         ),
         rx.el.h3(
             "No holdings yet",
-            class_name="text-base font-semibold text-gray-900",
+            class_name="text-base font-semibold text-slate-100",
         ),
         rx.el.p(
             "Add your first holding to start tracking performance, allocations, and activity.",
-            class_name="text-sm text-gray-500 mt-1 max-w-sm text-center",
+            class_name="text-sm text-slate-400 mt-1 max-w-sm text-center",
         ),
         rx.el.a(
             rx.icon("plus", class_name="h-4 w-4"),
             "Add a holding",
             href="/holdings",
-            class_name="mt-4 inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500",
+            class_name="mt-4 inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-500 focus:outline-hidden focus:ring-2 focus:ring-violet-400 shadow-[0_0_20px_-4px_rgba(139,92,246,0.6)]",
             aria_label="Go to holdings page to add a new holding",
         ),
-        class_name="flex flex-col items-center justify-center py-16 bg-white border border-gray-200 rounded-xl",
+        class_name="flex flex-col items-center justify-center py-16 bg-slate-900/60 border border-slate-800/80 rounded-xl",
     )
 
 

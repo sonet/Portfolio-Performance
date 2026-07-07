@@ -4,3 +4,4 @@ yfinance
 pandas
 plotly
 reflex-enterprise
+reflex-google-auth

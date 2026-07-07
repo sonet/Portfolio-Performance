@@ -1,4 +1,5 @@
 import reflex as rx
+from reflex_google_auth import GoogleAuthState
 
 
 def _nav_item(
@@ -76,19 +77,50 @@ def sidebar(active_route: str = "/") -> rx.Component:
             ),
             rx.el.div(
                 rx.el.div(
-                    rx.el.img(
-                        src="https://api.dicebear.com/9.x/notionists/svg?seed=investor",
-                        class_name="h-8 w-8 rounded-full bg-slate-800 ring-1 ring-violet-500/30",
+                    rx.cond(
+                        GoogleAuthState.tokeninfo["picture"].to(str) != "",
+                        rx.el.img(
+                            src=GoogleAuthState.tokeninfo["picture"].to(str),
+                            class_name="h-8 w-8 rounded-full bg-slate-800 ring-1 ring-violet-500/30 shrink-0",
+                            alt="Profile picture",
+                        ),
+                        rx.el.img(
+                            src="https://api.dicebear.com/9.x/notionists/svg?seed=investor",
+                            class_name="h-8 w-8 rounded-full bg-slate-800 ring-1 ring-violet-500/30 shrink-0",
+                            alt="Profile picture",
+                        ),
                     ),
                     rx.el.div(
                         rx.el.p(
-                            "Alex Morgan",
-                            class_name="text-xs font-semibold text-slate-100 leading-tight",
+                            rx.cond(
+                                GoogleAuthState.tokeninfo.get("given_name", "")
+                                != "",
+                                f"Hello, {GoogleAuthState.tokeninfo.get('given_name', '')}",
+                                rx.cond(
+                                    GoogleAuthState.user_name != "",
+                                    GoogleAuthState.user_name,
+                                    "Account",
+                                ),
+                            ),
+                            class_name="text-xs font-semibold text-slate-100 leading-tight truncate max-w-[120px]",
                         ),
                         rx.el.p(
-                            "Premium Plan",
-                            class_name="text-[11px] text-cyan-400 leading-tight",
+                            rx.cond(
+                                GoogleAuthState.user_email != "",
+                                GoogleAuthState.user_email,
+                                "Member Level: Standard",
+                            ),
+                            class_name="text-[11px] text-cyan-400/80 leading-tight truncate max-w-[120px]",
                         ),
+                        class_name="min-w-0 flex-1",
+                    ),
+                    rx.el.button(
+                        rx.icon("log-out", class_name="h-4 w-4"),
+                        on_click=GoogleAuthState.logout,
+                        aria_label="Sign out",
+                        title="Sign out",
+                        type="button",
+                        class_name="p-1.5 rounded-md text-slate-400 hover:bg-slate-800 hover:text-rose-300 border border-transparent hover:border-rose-500/30 shrink-0 focus:outline-hidden focus:ring-2 focus:ring-violet-400",
                     ),
                     class_name="flex items-center gap-2",
                 ),
@@ -105,14 +137,53 @@ def mobile_header() -> rx.Component:
     return rx.el.header(
         rx.el.div(
             rx.icon("chart-candlestick", class_name="h-4 w-4 text-white"),
-            class_name="h-8 w-8 rounded-lg flex items-center justify-center",
+            class_name="h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
             style={
                 "background": "linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)"
             },
         ),
         rx.el.p(
             "Portfolio Companion",
-            class_name="text-sm font-semibold text-slate-100",
+            class_name="text-sm font-semibold text-slate-100 flex-1 truncate",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.cond(
+                    GoogleAuthState.tokeninfo.get("picture", "") != "",
+                    rx.el.img(
+                        src=GoogleAuthState.tokeninfo.get("picture", ""),
+                        class_name="h-7 w-7 rounded-full bg-slate-800 ring-1 ring-violet-500/30",
+                        alt="Profile picture",
+                    ),
+                    rx.el.img(
+                        src="https://api.dicebear.com/9.x/notionists/svg?seed=investor",
+                        class_name="h-7 w-7 rounded-full bg-slate-800 ring-1 ring-violet-500/30",
+                        alt="Profile picture",
+                    ),
+                ),
+                rx.el.div(
+                    rx.el.p(
+                        rx.cond(
+                            GoogleAuthState.tokeninfo.get("given_name", "")
+                            != "",
+                            GoogleAuthState.tokeninfo.get("given_name", ""),
+                            "Account",
+                        ),
+                        class_name="text-xs font-semibold text-slate-100 truncate max-w-[80px]",
+                    ),
+                    class_name="hidden sm:block",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            rx.el.button(
+                rx.icon("log-out", class_name="h-4 w-4"),
+                on_click=GoogleAuthState.logout,
+                aria_label="Sign out",
+                title="Sign out",
+                type="button",
+                class_name="p-1.5 rounded-md text-slate-400 hover:bg-slate-800 hover:text-rose-300 border border-transparent hover:border-rose-500/30 focus:outline-hidden focus:ring-2 focus:ring-violet-400",
+            ),
+            class_name="flex items-center gap-3",
         ),
         class_name="md:hidden flex items-center gap-3 px-4 h-14 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 sticky top-0 z-10",
     )

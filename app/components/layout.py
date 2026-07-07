@@ -1,8 +1,15 @@
 import reflex as rx
 from app.components.sidebar import sidebar, mobile_header
+from app.components.auth import require_auth
 
 
 def page_layout(
+    content: rx.Component, active_route: str, title: str, subtitle: str
+) -> rx.Component:
+    return require_auth(_page_shell(content, active_route, title, subtitle))
+
+
+def _page_shell(
     content: rx.Component, active_route: str, title: str, subtitle: str
 ) -> rx.Component:
     return rx.el.div(

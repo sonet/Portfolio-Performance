@@ -9,7 +9,7 @@
 ## Phase 2: Asset Performance and Market Data ✅
 - [x] Add an asset discovery and detail experience with ticker search, asset profile, latest price, price changes, volatility, 52-week range, and benchmark comparison.
 - [x] Integrate market-data retrieval for historical prices and latest prices, with resilient loading, refresh status, and clear error states.
-- [x] Build time-series visualizations for asset price trends, portfolio value history, allocation, and returns using responsive chart components.
+- [x] Build time-series visualizations for asset price trends, allocation, and returns using responsive chart components.
 - [x] Add asset metric calculations for daily change, one-year change, highs/lows, volatility, and performance contribution to portfolio totals.
 
 ## Phase 3: Transactions, Data Sources, Imports, and Settings ✅
@@ -39,3 +39,9 @@
 - [x] Add daily, weekly, monthly, and quarterly period generation while preserving cumulative return and CAGR summaries.
 - [x] Update the report table labeling and empty states so users understand the active interval granularity.
 - [x] Validate examples including 12 months, 10 days, 10 weeks, 30 days, and 3 years.
+
+## Phase 8: Dark Theme Visual Refresh
+- [ ] Convert the full application shell, navigation, cards, tables, forms, charts, status bars, and empty states to a cohesive dark theme.
+- [ ] Apply a distinctive non-standard palette with deep ink surfaces, aurora violet/cyan accents, mint success states, coral warning/loss states, and readable contrast throughout.
+- [ ] Preserve all existing page structure, data flows, filters, event behavior, responsive layouts, and accessibility affordances.
+- [ ] Validate that tables, badges, inputs, charts, and color-scaled performance cells remain readable in the dark theme.
